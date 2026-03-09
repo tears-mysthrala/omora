@@ -1,6 +1,6 @@
 if [[ -n ${OMARCHY_ONLINE_INSTALL:-} ]]; then
   # Install build tools
-  sudo dnf groupinstall -y 'Development Tools'
+  sudo dnf group install -y 'Development Tools'
 
   # Configure Omarchy repo
   sudo cp -f ~/.local/share/omarchy/default/dnf/omarchy-${OMARCHY_MIRROR:-stable}.repo /etc/yum.repos.d/omarchy.repo

@@ -35,4 +35,4 @@ vulkan-loader
 mesa-vulkan-drivers
 
 # Development tools group (replaces base-devel)
-# Install via: sudo dnf groupinstall -y 'Development Tools'
+# Install via: sudo dnf group install -y 'Development Tools'

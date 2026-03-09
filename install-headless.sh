@@ -31,12 +31,12 @@ fi
 log "Setting up repositories..."
 
 # Development tools group
-sudo dnf groupinstall -y 'Development Tools' >/dev/null
+sudo dnf group install -y 'Development Tools' >/dev/null
 
 # Docker CE repo (if not present)
 if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
   sudo dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo 2>/dev/null \
-    || sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo 2>/dev/null \
+    || sudo dnf-3 config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo 2>/dev/null \
     || warn "Could not add Docker repo — install docker manually if needed"
 fi
 
