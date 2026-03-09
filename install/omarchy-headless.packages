@@ -1,0 +1,68 @@
+# Omarchy headless/WSL2 package list - dev tools and terminal only
+# No GUI, no Wayland, no audio, no bluetooth
+
+# Shell essentials
+bash-completion
+starship
+zoxide
+fzf
+
+# Core CLI tools
+bat
+btop
+du-dust
+eza
+fd-find
+ripgrep
+jq
+less
+tree-sitter-cli
+tealdeer
+whois
+unzip
+plocate
+inxi
+
+# Git & dev
+git
+gh
+lazygit
+lazydocker
+neovim
+tmux
+
+# Build tools
+clang
+llvm
+rust
+cargo
+ruby
+luarocks
+
+# Runtime & languages
+mise
+dotnet-runtime-9.0
+
+# Docker
+docker-ce
+docker-buildx-plugin
+docker-compose-plugin
+
+# Databases (client libs)
+mariadb-connector-c
+postgresql-libs
+
+# Network
+curl
+wget
+iproute
+
+# System
+man-db
+htop
+fastfetch
+ImageMagick
+xmlstarlet
+
+# Python
+python3-gobject
