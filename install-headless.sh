@@ -45,7 +45,7 @@ fi
 # COPR repos for packages not in official Fedora repos
 log "Enabling COPR repos..."
 sudo dnf copr enable -y atim/lazygit 2>/dev/null || warn "Could not enable COPR atim/lazygit"
-sudo dnf copr enable -y varlad/eza 2>/dev/null || warn "Could not enable COPR varlad/eza"
+sudo dnf copr enable -y terjeros/eza 2>/dev/null || warn "Could not enable COPR terjeros/eza"
 
 # ── Packages ─────────────────────────────────────────────────────────────────
 
