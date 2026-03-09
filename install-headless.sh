@@ -8,7 +8,7 @@ set -eEo pipefail
 # Define Omarchy/Omora locations
 export OMARCHY_PATH="$HOME/.local/share/omarchy"
 export OMARCHY_INSTALL="$OMARCHY_PATH/install"
-export PATH="$OMARCHY_PATH/bin:$PATH"
+export PATH="$OMARCHY_PATH/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,6 +42,11 @@ if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
     || warn "Could not add Docker repo — install docker manually if needed"
 fi
 
+# COPR repos for packages not in official Fedora repos
+log "Enabling COPR repos..."
+sudo dnf copr enable -y atim/lazygit 2>/dev/null || warn "Could not enable COPR atim/lazygit"
+sudo dnf copr enable -y varlad/eza 2>/dev/null || warn "Could not enable COPR varlad/eza"
+
 # ── Packages ─────────────────────────────────────────────────────────────────
 
 log "Installing headless packages..."
@@ -50,9 +55,33 @@ mapfile -t packages < <(grep -v '^#' "$OMARCHY_INSTALL/omarchy-headless.packages
 # Install what's available, skip what isn't (some may not exist on all Fedora versions)
 for pkg in "${packages[@]}"; do
   if ! rpm -q "$pkg" &>/dev/null; then
-    sudo dnf install -y "$pkg" 2>/dev/null || warn "Skipped: $pkg (not available)"
+    sudo dnf install -y "$pkg" 2>/dev/null || warn "Skipped: $pkg (not available in repos)"
   fi
 done
+
+# ── Tools not in Fedora repos (installed via their own installers) ───────────
+
+log "Installing tools from upstream..."
+
+# Starship (shell prompt)
+if ! command -v starship &>/dev/null; then
+  log "Installing starship..."
+  curl -sS https://starship.rs/install.sh | sh -s -- -y >/dev/null
+fi
+
+# Mise (version manager)
+if ! command -v mise &>/dev/null; then
+  log "Installing mise..."
+  curl -sS https://mise.run | sh >/dev/null
+  eval "$(~/.local/bin/mise activate bash)" 2>/dev/null || true
+fi
+
+# Lazydocker (if not installed via dnf)
+if ! command -v lazydocker &>/dev/null; then
+  log "Installing lazydocker..."
+  curl -sS https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash >/dev/null 2>&1 \
+    || warn "Could not install lazydocker"
+fi
 
 # ── Shell config ─────────────────────────────────────────────────────────────
 
@@ -137,6 +166,11 @@ log "Omora headless setup complete!"
 echo
 echo "  Restart your shell or run: source ~/.bashrc"
 echo
-echo "  Installed: neovim, tmux, starship, fzf, ripgrep, lazygit, docker, mise, and more"
-echo "  Work dir:  ~/Work"
+echo "  Installed:"
+echo "    Shell:  starship, fzf, zoxide, bat, eza, fd, ripgrep"
+echo "    Dev:    neovim, tmux, lazygit, lazydocker, git, gh"
+echo "    Build:  gcc, clang, rust, cargo, ruby, mise, node"
+echo "    Infra:  docker, docker-compose, docker-buildx"
+echo
+echo "  Work dir: ~/Work"
 echo

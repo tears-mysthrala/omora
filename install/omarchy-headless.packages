@@ -1,9 +1,13 @@
-# Omarchy headless/WSL2 package list - dev tools and terminal only
+# Omora headless/WSL2 package list - dev tools and terminal only
 # No GUI, no Wayland, no audio, no bluetooth
+#
+# Packages NOT here (installed via upstream scripts):
+#   starship  -> https://starship.rs/install.sh
+#   mise      -> https://mise.run
+#   lazydocker -> github installer script
 
 # Shell essentials
 bash-completion
-starship
 zoxide
 fzf
 
@@ -27,7 +31,6 @@ inxi
 git
 gh
 lazygit
-lazydocker
 neovim
 tmux
 
@@ -40,7 +43,6 @@ ruby
 luarocks
 
 # Runtime & languages
-mise
 dotnet-runtime-9.0
 
 # Docker
@@ -50,7 +52,7 @@ docker-compose-plugin
 
 # Databases (client libs)
 mariadb-connector-c
-postgresql-libs
+libpq
 
 # Network
 curl
