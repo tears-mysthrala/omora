@@ -31,7 +31,9 @@ fi
 log "Setting up repositories..."
 
 # Development tools group
-sudo dnf group install -y 'Development Tools' >/dev/null
+sudo dnf group install -y development-tools >/dev/null 2>&1 \
+  || sudo dnf group install -y 'Development Tools' >/dev/null 2>&1 \
+  || sudo dnf install -y gcc gcc-c++ make automake autoconf >/dev/null
 
 # Docker CE repo (if not present)
 if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
