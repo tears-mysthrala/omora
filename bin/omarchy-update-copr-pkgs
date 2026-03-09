@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Update COPR packages (on Fedora, COPR packages update together with dnf upgrade)
+# This is kept for compatibility with the update orchestration scripts.
+
+echo -e "\e[32m\nUpdate COPR packages\e[0m"
+sudo dnf upgrade -y --enablerepo='copr:*'
+echo

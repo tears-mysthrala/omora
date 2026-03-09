@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Overwrite the Omarchy repo configuration in /etc/yum.repos.d/ with the correct channel, then update all packages.
+# This is used after switching between Omarchy release channels to ensure the right packages for the right channel are available.
+
+# Take backup of existing repo file
+sudo cp -f /etc/yum.repos.d/omarchy.repo /etc/yum.repos.d/omarchy.repo.bak 2>/dev/null || true
+
+channel="${1:-stable}"
+
+if [[ $channel != "stable" && $channel != "rc" && $channel != "edge" ]]; then
+  echo "Error: Invalid channel '$channel'. Must be one of: stable, rc, edge"
+  exit 1
+fi
+
+echo "Setting channel to $channel"
+echo
+
+sudo cp -f "$OMARCHY_PATH/default/dnf/omarchy-$channel.repo" /etc/yum.repos.d/omarchy.repo
+
+# Refresh repos and update
+sudo dnf makecache
+sudo dnf distro-sync -y

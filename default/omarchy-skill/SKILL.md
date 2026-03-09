@@ -344,7 +344,7 @@ When user requests system changes:
 2. **Is it a config edit?** Edit in `~/.config/`, never `~/.local/share/omarchy/`
 3. **Is it a theme customization?** Create a NEW custom theme directory
 4. **Is it automation?** Use hooks in `~/.config/omarchy/hooks/`
-5. **Is it a package install?** Use `omarchy-pkg-add` (or `omarchy-pkg-aur-add` for AUR-only packages)
+5. **Is it a package install?** Use `omarchy-pkg-add` (or `omarchy-pkg-copr-add` for COPR-only packages)
 6. **Unsure if command exists?** Search with `compgen -c | grep omarchy`
 
 ## Out of Scope

@@ -39,12 +39,11 @@ fi
 
 case "$LOG_TYPE" in
 install)
-  ARCHINSTALL_LOG="/var/log/archinstall/install.log"
   OMARCHY_LOG="/var/log/omarchy-install.log"
 
   # Combine system info with logs
   cat "$SYSTEM_INFO" >"$TEMP_LOG"
-  cat $ARCHINSTALL_LOG $OMARCHY_LOG >>"$TEMP_LOG" 2>/dev/null
+  cat $OMARCHY_LOG >>"$TEMP_LOG" 2>/dev/null
 
   if [[ ! -s $TEMP_LOG ]]; then
     echo "Error: No install logs found"
@@ -86,9 +85,9 @@ installed|system-info)
   {
     echo ""
     echo "========================================="
-    echo "INSTALLED PACKAGES (pacman -Q)"
+    echo "INSTALLED PACKAGES (rpm -qa)"
     echo "========================================="
-    pacman -Q 2>/dev/null || echo "Failed to get package list"
+    rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE}\n' 2>/dev/null | sort || echo "Failed to get package list"
   } >>"$TEMP_LOG"
 
   if [[ ! -s $TEMP_LOG ]]; then

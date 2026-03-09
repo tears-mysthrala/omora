@@ -29,7 +29,7 @@ Use these instead of raw shell commands:
 
 - `omarchy-cmd-missing` / `omarchy-cmd-present` - check for commands
 - `omarchy-pkg-missing` / `omarchy-pkg-present` - check for packages
-- `omarchy-pkg-add` - install packages (handles both pacman and AUR)
+- `omarchy-pkg-add` - install packages (handles both dnf repos and COPR)
 - `omarchy-hw-asus-rog` - detect ASUS ROG hardware (and similar `hw-*` commands)
 
 # Config Structure

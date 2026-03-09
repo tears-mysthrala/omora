@@ -92,7 +92,7 @@ if [[ "--remove" == $1 ]]; then
 
   # Uninstall packages
   print_info "Removing fingerprint packages..."
-  sudo pacman -Rns --noconfirm fprintd
+  sudo dnf remove -y fprintd
 
   print_success "Fingerprint authentication has been completely removed."
 else

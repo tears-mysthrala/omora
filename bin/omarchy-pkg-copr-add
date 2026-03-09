@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Add the named packages to the system if they're missing. Returns false if it couldn't be done.
+# Add the named packages to the system from COPR repos if they're missing. Returns false if it couldn't be done.
+# On Fedora, COPR packages are installed via dnf just like regular packages once the repo is enabled.
 
 if omarchy-pkg-missing "$@"; then
   sudo dnf install -y "$@" || exit 1
 fi
 
 for pkg in "$@"; do
-  # Secondary check to handle states where dnf doesn't actually register an error
   if ! rpm -q "$pkg" &>/dev/null; then
     echo -e "\033[31mError: Package '$pkg' did not install\033[0m" >&2
     exit 1

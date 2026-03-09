@@ -1,0 +1,6 @@
+[omarchy]
+name=Omarchy Stable Repository
+baseurl=https://pkgs.omarchy.org/stable/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://keys.openpgp.org/vks/v1/by-fingerprint/40DFB630FF42BCFFB047046CF0134EE680CAC571

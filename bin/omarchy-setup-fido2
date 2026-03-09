@@ -80,7 +80,7 @@ if [[ "--remove" == $1 ]]; then
 
   # Uninstall packages
   print_info "Removing FIDO2 packages..."
-  sudo pacman -Rns --noconfirm libfido2 pam-u2f
+  sudo dnf remove -y libfido2 pam-u2f
 
   print_success "FIDO2 authentication has been completely removed."
 else

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Removes hibernation setup: disables swap, removes swapfile, removes fstab entry,
-# removes resume hook, and removes suspend-then-hibernate configuration.
+# removes resume module, and removes suspend-then-hibernate configuration.
 
-MKINITCPIO_CONF="/etc/mkinitcpio.conf.d/omarchy_resume.conf"
+DRACUT_RESUME_CONF="/etc/dracut.conf.d/omarchy_resume.conf"
 
 # Check if hibernation is configured
-if [[ ! -f $MKINITCPIO_CONF ]] || ! grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; then
+if [[ ! -f $DRACUT_RESUME_CONF ]] || ! grep -q 'add_dracutmodules.*resume' "$DRACUT_RESUME_CONF"; then
   echo "Hibernation is not set up"
   exit 0
 fi
@@ -49,11 +49,16 @@ echo "Removing suspend-then-hibernate configuration"
 sudo rm -f /etc/systemd/logind.conf.d/lid.conf
 sudo rm -f /etc/systemd/sleep.conf.d/hibernate.conf
 
-# Remove mkinitcpio resume hook
-echo "Removing resume hook"
-sudo rm "$MKINITCPIO_CONF"
+# Remove GRUB resume parameters
+sudo rm -f /etc/default/grub.d/omarchy-resume.cfg
+sudo rm -f /etc/default/grub.d/omarchy-rtc-alarm.cfg
+
+# Remove dracut resume module
+echo "Removing resume module"
+sudo rm "$DRACUT_RESUME_CONF"
 
 echo "Regenerating initramfs..."
-sudo limine-mkinitcpio
+sudo dracut --regenerate-all --force
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
 echo "Hibernation removed"

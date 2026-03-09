@@ -1,66 +1,38 @@
 # Packages installed outside of install/packages.sh or optional packages
 # Utilized by ISO builder to ensure package availability in the ISO
+# Fedora version - server/dev focused
 
-autoconf-archive
-asusctl
-base
-base-devel
-broadcom-wl
+autoconf
+automake
 btrfs-progs
-dart
 dkms
 egl-wayland
 git
-gst-plugin-pipewire
+gstreamer1-plugin-pipewire
 gtk4-layer-shell
 htop
 intltool
 iwd
-jdk-openjdk
+java-latest-openjdk
 libpulse
 libsass
 intel-media-driver
 libva-intel-driver
-libva-nvidia-driver
-limine
-limine-mkinitcpio-hook
-limine-snapper-sync
-linux
-linux-firmware
-linux-headers
-macbook12-spi-driver-dkms
-nvidia-580xx-dkms
-nvidia-dkms
-nvidia-open-dkms
-nvidia-580xx-utils
-nvidia-utils
-lib32-nvidia-580xx-utils
-lib32-nvidia-utils
+kernel-devel
 pipewire
 pipewire-alsa
-pipewire-jack
-pipewire-pulse
-qt6-wayland
+pipewire-jack-audio-connection-kit
+pipewire-pulseaudio
+qt6-qtwayland
 sassc
 snapper
 webp-pixbuf-loader
 wget
-yay-debug
-yt6801-dkms
 zram-generator
 
 # Vulkan drivers (auto-detected by hardware)
-vulkan-intel
-vulkan-radeon
-vulkan-asahi
+vulkan-loader
+mesa-vulkan-drivers
 
-# Surface laptop support packages
-linux-firmware-marvell
-
-# T2 MacBook support packages
-apple-bcm-firmware
-apple-t2-audio-config
-linux-t2
-linux-t2-headers
-t2fanrd
-tiny-dfr
+# Development tools group (replaces base-devel)
+# Install via: sudo dnf groupinstall -y 'Development Tools'

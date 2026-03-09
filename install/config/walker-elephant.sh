@@ -8,21 +8,15 @@ cp $OMARCHY_PATH/default/walker/walker.desktop ~/.config/autostart/
 mkdir -p ~/.config/systemd/user/app-walker@autostart.service.d/
 cp $OMARCHY_PATH/default/walker/restart.conf ~/.config/systemd/user/app-walker@autostart.service.d/restart.conf
 
-# Create pacman hook to restart walker after updates
-sudo mkdir -p /etc/pacman.d/hooks
-sudo tee /etc/pacman.d/hooks/walker-restart.hook > /dev/null << EOF
-[Trigger]
-Type = Package
-Operation = Upgrade
-Target = walker
-Target = walker-debug
-Target = elephant*
-
-[Action]
-Description = Restarting Walker services after system update
-When = PostTransaction
-Exec = $OMARCHY_PATH/bin/omarchy-restart-walker
+# Create dnf post-transaction action to restart walker after updates
+sudo mkdir -p /etc/dnf/plugins/post-transaction-actions.d
+sudo tee /etc/dnf/plugins/post-transaction-actions.d/walker-restart.action > /dev/null << EOF
+walker:any:$OMARCHY_PATH/bin/omarchy-restart-walker
+elephant*:any:$OMARCHY_PATH/bin/omarchy-restart-walker
 EOF
+
+# Ensure the post-transaction-actions plugin is installed
+omarchy-pkg-add python3-dnf-plugin-post-transaction-actions 2>/dev/null || true
 
 # Link the visual theme menu config
 mkdir -p ~/.config/elephant/menus
