@@ -1,8 +1,13 @@
 # Changes require a restart to take effect.
 
-# Ensure Omarchy bins are in the path
-export OMARCHY_PATH=$HOME/.local/share/omarchy
-export PATH=$OMARCHY_PATH/bin:$PATH
+# Ensure Omora bins are in the path while keeping Omarchy compatibility.
+if [ -d "$HOME/.local/share/omora" ]; then
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omora}"
+else
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omarchy}"
+fi
+export OMARCHY_PATH="${OMARCHY_PATH:-$OMORA_PATH}"
+export PATH=$OMORA_PATH/bin:$PATH
 
 # Set default terminal and editor
 source ~/.config/uwsm/default

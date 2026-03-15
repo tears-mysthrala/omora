@@ -3,5 +3,10 @@ export SUDO_EDITOR="$EDITOR"
 export BAT_THEME=ansi
 
 # Duplicated from .config/uwsm/env so SSH works too
-export OMARCHY_PATH=$HOME/.local/share/omarchy
-export PATH=$OMARCHY_PATH/bin:$PATH:$HOME/.local/bin
+if [[ -d "$HOME/.local/share/omora" ]]; then
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omora}"
+else
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omarchy}"
+fi
+export OMARCHY_PATH="${OMARCHY_PATH:-$OMORA_PATH}"
+export PATH=$OMORA_PATH/bin:$PATH:$HOME/.local/bin

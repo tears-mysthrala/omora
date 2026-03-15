@@ -1,6 +1,13 @@
-source ~/.local/share/omarchy/default/bash/envs
-source ~/.local/share/omarchy/default/bash/shell
-source ~/.local/share/omarchy/default/bash/aliases
-source ~/.local/share/omarchy/default/bash/functions
-source ~/.local/share/omarchy/default/bash/init
-[[ $- == *i* ]] && bind -f ~/.local/share/omarchy/default/bash/inputrc
+if [[ -d "$HOME/.local/share/omora" ]]; then
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omora}"
+else
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omarchy}"
+fi
+export OMARCHY_PATH="${OMARCHY_PATH:-$OMORA_PATH}"
+
+source "$OMORA_PATH/default/bash/envs"
+source "$OMORA_PATH/default/bash/shell"
+source "$OMORA_PATH/default/bash/aliases"
+source "$OMORA_PATH/default/bash/functions"
+source "$OMORA_PATH/default/bash/init"
+[[ $- == *i* ]] && bind -f "$OMORA_PATH/default/bash/inputrc"

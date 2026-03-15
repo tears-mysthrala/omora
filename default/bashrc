@@ -3,7 +3,13 @@
 
 # All the default Omarchy aliases and functions
 # (don't mess with these directly, just overwrite them here!)
-source ~/.local/share/omarchy/default/bash/rc
+if [[ -d "$HOME/.local/share/omora" ]]; then
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omora}"
+else
+  export OMORA_PATH="${OMORA_PATH:-$HOME/.local/share/omarchy}"
+fi
+export OMARCHY_PATH="${OMARCHY_PATH:-$OMORA_PATH}"
+source "$OMORA_PATH/default/bash/rc"
 
 # Add your own exports, aliases, and functions here.
 #
