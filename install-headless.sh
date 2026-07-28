@@ -2,8 +2,31 @@
 
 # Omora headless/WSL2 installer
 # Installs dev tools, shell config, and terminal environment only — no GUI/Wayland
+#
+# This script is executed by boot-headless.sh. Run it, don't source it from
+# an interactive shell (it calls exit on failure).
+#
+# Options:
+#   --dry-run            Print the planned actions without changing the system
+#
+# Environment:
+#   OMORA_ASSUME_YES=1   Non-interactive mode: skip all prompts
+#   OMORA_DRY_RUN=1      Same as --dry-run
 
 set -eEo pipefail
+
+# ── Arguments ────────────────────────────────────────────────────────────────
+
+DRY_RUN="${OMORA_DRY_RUN:-0}"
+ASSUME_YES="${OMORA_ASSUME_YES:-0}"
+
+for arg in "$@"; do
+  case $arg in
+    --dry-run) DRY_RUN=1 ;;
+    -y | --yes) ASSUME_YES=1 ;;
+    *) echo -e "\e[33m=> Unknown option: $arg\e[0m" ;;
+  esac
+done
 
 # Define Omarchy/Omora locations
 export OMARCHY_PATH="$HOME/.local/share/omarchy"
@@ -22,9 +45,80 @@ if (( EUID == 0 )); then
   fail "Do not run as root. Run as your regular user (sudo will be used when needed)."
 fi
 
+if [[ ! -f /etc/fedora-release ]]; then
+  fail "Omora requires Fedora Linux (/etc/fedora-release not found).
+For Arch Linux, use upstream Omarchy instead: https://github.com/basecamp/omarchy"
+fi
+
 if ! command -v dnf &>/dev/null; then
   fail "dnf not found. This installer requires Fedora or a dnf-based distro."
 fi
+
+# Omora targets dnf5, the default package manager since Fedora 41.
+# Older Fedora releases are untested; ask before continuing.
+FEDORA_VERSION_ID="$(. /etc/os-release && echo "${VERSION_ID:-0}")"
+if (( FEDORA_VERSION_ID < 41 )); then
+  warn "Omora is developed against Fedora 41+ (dnf5). Detected: $(cat /etc/fedora-release)."
+  warn "This release is untested and some packages may be missing."
+  if (( ASSUME_YES == 0 )); then
+    reply=""
+    read -rp "Continue anyway? [y/N] " reply < /dev/tty || true
+    [[ $reply =~ ^[Yy]$ ]] || fail "Aborted. Re-run with OMORA_ASSUME_YES=1 to skip this check."
+  fi
+fi
+
+# ── Dry run ──────────────────────────────────────────────────────────────────
+
+if (( DRY_RUN == 1 )); then
+  log "Dry run — no changes will be made."
+  echo
+  echo "  Target system: $(cat /etc/fedora-release)"
+  echo
+  echo "  Would perform:"
+  echo "    1. Install the 'Development Tools' group (gcc, make, ...)"
+  echo "    2. Add the Docker CE repo (download.docker.com/linux/fedora)"
+  echo "    3. Enable COPR repos: atim/lazygit, terjeros/eza"
+  echo "    4. Install packages from install/omarchy-headless.packages:"
+
+  mapfile -t packages < <(grep -v '^#' "$OMARCHY_INSTALL/omarchy-headless.packages" | grep -v '^$')
+  for pkg in "${packages[@]}"; do
+    if rpm -q "$pkg" &>/dev/null; then
+      echo "       - $pkg (already installed)"
+    else
+      echo "       - $pkg"
+    fi
+  done
+
+  echo "    5. Install upstream tools: starship, mise, lazydocker"
+  echo "    6. Copy ~/.bashrc and ~/.config/{git,lazygit,starship.toml,tmux,btop,fastfetch}"
+  echo "       (existing files are backed up to ~/.omora-backup/<timestamp>/ first)"
+  echo "    7. Configure git identity (interactive, skipped with OMORA_ASSUME_YES=1)"
+  echo "    8. Write /etc/docker/daemon.json and add ${USER:-$(id -un)} to the docker group"
+  echo "    9. Create ~/Work with a mise config and install Node.js via mise"
+  echo "   10. Raise inotify limits (/etc/sysctl.d/40-max-user-watches.conf, 41-max-user-instances.conf)"
+  echo
+  log "Dry run complete. Re-run without --dry-run to apply these changes."
+  exit 0
+fi
+
+# ── Change tracking (for the final summary) ──────────────────────────────────
+
+INSTALLED_PKGS=()
+SKIPPED_PKGS=()
+COPIED_CONFIGS=()
+BACKED_UP=()
+BACKUP_DIR="$HOME/.omora-backup/$(date +%Y%m%d-%H%M%S)"
+
+# Back up a file inside $HOME before overwriting it
+backup_file() {
+  local target="$1"
+  if [[ -e $target ]]; then
+    local rel="${target#"$HOME"/}"
+    mkdir -p "$BACKUP_DIR/$(dirname "$rel")"
+    cp -a "$target" "$BACKUP_DIR/$rel"
+    BACKED_UP+=("$target")
+  fi
+}
 
 # ── Repos ────────────────────────────────────────────────────────────────────
 
@@ -55,7 +149,12 @@ mapfile -t packages < <(grep -v '^#' "$OMARCHY_INSTALL/omarchy-headless.packages
 # Install what's available, skip what isn't (some may not exist on all Fedora versions)
 for pkg in "${packages[@]}"; do
   if ! rpm -q "$pkg" &>/dev/null; then
-    sudo dnf install -y "$pkg" 2>/dev/null || warn "Skipped: $pkg (not available in repos)"
+    if sudo dnf install -y "$pkg" 2>/dev/null; then
+      INSTALLED_PKGS+=("$pkg")
+    else
+      SKIPPED_PKGS+=("$pkg")
+      warn "Skipped: $pkg (not available in repos)"
+    fi
   fi
 done
 
@@ -88,28 +187,40 @@ fi
 log "Configuring shell environment..."
 
 # Bashrc
+backup_file "$HOME/.bashrc"
 cp "$OMARCHY_PATH/default/bashrc" ~/.bashrc
+COPIED_CONFIGS+=("~/.bashrc")
 
 # Core configs (only terminal-relevant ones)
 mkdir -p ~/.config
 
 for cfg in git lazygit starship.toml tmux btop fastfetch; do
   if [[ -e "$OMARCHY_PATH/config/$cfg" ]]; then
+    backup_file "$HOME/.config/$cfg"
     cp -R "$OMARCHY_PATH/config/$cfg" ~/.config/
+    COPIED_CONFIGS+=("~/.config/$cfg")
   fi
 done
 
 # ── Git ──────────────────────────────────────────────────────────────────────
 
 log "Configuring git..."
-if [[ -z $(git config --global user.name 2>/dev/null) ]]; then
-  read -rp "Git name (leave empty to skip): " git_name
-  [[ -n $git_name ]] && git config --global user.name "$git_name"
-fi
 
-if [[ -z $(git config --global user.email 2>/dev/null) ]]; then
-  read -rp "Git email (leave empty to skip): " git_email
-  [[ -n $git_email ]] && git config --global user.email "$git_email"
+if (( ASSUME_YES == 1 )); then
+  log "OMORA_ASSUME_YES=1 — skipping git identity prompts"
+else
+  # Read from /dev/tty so prompts work when piped via curl | bash
+  if [[ -z $(git config --global user.name 2>/dev/null) ]]; then
+    git_name=""
+    read -rp "Git name (leave empty to skip): " git_name < /dev/tty || true
+    [[ -n $git_name ]] && git config --global user.name "$git_name"
+  fi
+
+  if [[ -z $(git config --global user.email 2>/dev/null) ]]; then
+    git_email=""
+    read -rp "Git email (leave empty to skip): " git_email < /dev/tty || true
+    [[ -n $git_email ]] && git config --global user.email "$git_email"
+  fi
 fi
 
 # ── Docker ───────────────────────────────────────────────────────────────────
@@ -159,10 +270,21 @@ if [[ -d /etc/sysctl.d ]]; then
   sudo sysctl --system >/dev/null 2>&1 || true
 fi
 
-# ── Done ─────────────────────────────────────────────────────────────────────
+# ── Summary ──────────────────────────────────────────────────────────────────
 
 echo
 log "Omora headless setup complete!"
+echo
+echo "  Summary of changes:"
+echo "    Packages installed: ${#INSTALLED_PKGS[@]}"
+if (( ${#SKIPPED_PKGS[@]} > 0 )); then
+  echo "    Packages skipped (unavailable): ${SKIPPED_PKGS[*]}"
+fi
+echo "    Configs copied:     ${COPIED_CONFIGS[*]}"
+if (( ${#BACKED_UP[@]} > 0 )); then
+  echo "    Backups saved to:   $BACKUP_DIR"
+fi
+echo "    System files:       /etc/docker/daemon.json, /etc/sysctl.d/4{0,1}-max-user-*.conf"
 echo
 echo "  Restart your shell or run: source ~/.bashrc"
 echo
